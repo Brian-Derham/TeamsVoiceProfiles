@@ -1,0 +1,49 @@
+[
+  [
+    {
+      "ProfileName": "Generic",
+      "Domain": "domain.onmicrosoft.com",
+      "PhoneNumberType": "OperatorConnect",
+      "RoutingPolicy": "Global",
+      "DialOutPolicy": "DialoutCPCandPSTNDomestic",
+      "CallingLineIdentity": "CompanyCLI",
+      "Description": "General profile for staff that are on operator connect"
+    },
+    {
+      "ProfileName": "Sales",
+      "Domain": "domain.onmicrosoft.com",
+      "PhoneNumberType": "OperatorConnect",
+      "RoutingPolicy": "Global",
+      "DialOutPolicy": "DialoutCPCandPSTNDomestic",
+      "CallingLineIdentity": "SalesCLI",
+      "Description": "Sales staff profile"
+    },
+    {
+      "ProfileName": "Support",
+      "Domain": "domain.onmicrosoft.com",
+      "PhoneNumberType": "OperatorConnect",
+      "RoutingPolicy": "Global",
+      "DialOutPolicy": "DialoutCPCandPSTNDomestic",
+      "CallingLineIdentity": "SupportCLI",
+      "Description": "Support staff profile"
+    },
+    {
+      "ProfileName": "Admin",
+      "Domain": "domain.onmicrosoft.com",
+      "PhoneNumberType": "DirectRouting",
+      "RoutingPolicy": "DirectRoutingSupplier",
+      "DialOutPolicy": "DialoutCPCandPSTNDomestic",
+      "CallingLineIdentity": "CLI Toggle",
+      "Description": "Standard Direct Routing profile"
+    },
+    {
+      "ProfileName": "TEST",
+      "Domain": "Otherdomain.onmicrosoft.com",
+      "PhoneNumberType": "DirectRouting",
+      "RoutingPolicy": "AnotherDirectRoutingSupplier",
+      "DialOutPolicy": "DialoutCPCandPSTNDomestic",
+      "CallingLineIdentity": "CLI Toggle",
+      "Description": "A test profile for checking stuff"
+    }
+  ]
+]
