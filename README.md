@@ -1,6 +1,6 @@
 ## Microsoft Teams Profiles
 
-#### Decsiption
+#### Description
 A bunch of functions ready to use to do Teams admin as if they're commandlets. Currently its mainly geared towards Operator Connect and Calling plans but does support Direct Routing as part of the profiles although I have not tested with multiple direct routing providers in the same tenant.
 
     Function Get-SCTeamsProfiles
