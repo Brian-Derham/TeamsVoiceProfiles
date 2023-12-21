@@ -5,7 +5,7 @@ A bunch of functions ready to use to do Teams admin as if they're commandlets. C
 
     Function Get-SCTeamsProfiles
 	Function Set-SCTeamsProfiles -SCProfile ProfileObject
-	Function New-SCTeamsProfile -ProfileName Some_Name -Domain MyDomain.local -PhoneNumberType DirectRouting -RoutingPolicy Global -DialOutPolicy DialoutCPCandPSTNDomestic -CallingLineIdentity ACompany 08001231234 -Description "Some kind of profile details"
+	Function New-SCTeamsProfile -ProfileName Some_Name -Domain MyDomain.local -PhoneNumberType DirectRouting -RoutingPolicy Global -DialOutPolicy DialoutCPCandPSTNDomestic -CallingLineIdentity CompanyCLI -Description "Some kind of profile details"
 	Function New-SCTeamsUser -ProfileName BCP -LoginName John.Smith -PSTN +442071231234
 	Function Remove-SCTeamsUserPSTN -ProfileName Sales -LoginName John.Smith
 	Function Get-SCHuntGroups -FileName Output.csv
