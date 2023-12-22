@@ -3,12 +3,12 @@
 	Function Get-SCTeamsProfiles
 	Function Set-SCTeamsProfiles -SCProfile ProfileObject
 	Function New-SCTeamsProfile -ProfileName Some_Name -Domain MyDomain.local -PhoneNumberType DirectRouting -RoutingPolicy Global -DialOutPolicy DialoutCPCandPSTNDomestic -CallingLineIdentity SMOOR 03003037800 -Description "Some kind of profile details"
-	Function New-SCTeamsUser -ProfileName BCP -LoginName John.Smith -PSTN +441278435200
+	Function New-SCTeamsUser -ProfileName BCP -LoginName John.Smith -PSTN +441234123123
 	Function Remove-SCTeamsUserPSTN -ProfileName BCP -LoginName John.Smith
 	Function Get-SCHuntGroups -FileName Output.csv
 	Function Get-SCOperatorConnectUsers -FileName Output.csv
 	Function Get-SCTeamsUser -ProfileName SCC -LoginName Nick.James
-	Function Get-SCPhoneNumber -PSTN +441278435279
+	Function Get-SCPhoneNumber -PSTN +441234123123
 	Function Get-SCFreeUserNumber -NumberType OperatorConnect
 	Function Test-SCTeamsProfile -ProfileName BCP
 
@@ -97,6 +97,26 @@ Param ( [String] $ProfileName)
 }
 
 Function Get-SCTeamsUser { [CmdletBinding()]
+<#
+.Synopsis
+	Gets the details of a Teams voice user.
+	
+   .Description 
+	Gets the details and policies of a Teams user. 
+	The TeamsProfile json file is used to 'build' the UPN/SIPAdress.
+	
+   .Parameter ProfileName
+    The profile name used to select the required domain details.
+   
+   .Parameter LoginName
+    Used to build the UPN/SIPAddress of the user usually first.lastname (john.smith) but could be intials+lastname (JASmith).
+	
+    .Example 
+	Get-SCTeamsUser -ProfileName Sales -LoginName John.Smith
+
+#>
+
+
 	param (
 	[ValidateScript({Test-SCTeamsProfile -ProfileName $_}, ErrorMessage = "Invalid Profile! Run Get-SCTeamsProfiles to see a list of profiles")] [Parameter(Mandatory=$True)] [string[]] $ProfileName, 
 	[ValidateNotNullOrEmpty()] [Parameter(Mandatory=$True)] [string[]] $LoginName)
@@ -226,7 +246,7 @@ Function New-SCTeamsUser { [CmdletBinding()]
     The phone number in +441234123123 format (E.164) 
 	
    .Example 
-	New-SCTeamsUser -ProfileName SDC -LoginName Brian.Derham -PSTN +441278435279
+	New-SCTeamsUser -ProfileName SDC -LoginName John.Smith -PSTN +441234123123
 
 	New-SCTeamsUser | import-csv -Path ".\Users.csv"
 
@@ -257,9 +277,9 @@ Function New-SCTeamsUser { [CmdletBinding()]
 #>
 [CmdletBinding()]
 param (
-	[ValidateScript({Test-SCTeamsProfile -ProfileName $_}, ErrorMessage = "Invalid Profile! Run Get-SCTeamsProfiles to see a list of profiles")] [Parameter(Mandatory=$True)] [string[]] $ProfileName, 
-	[ValidateNotNullOrEmpty()] [Parameter(Mandatory=$True)] [string[]] $LoginName, 
-	[ValidatePattern ("^\+(?:[0-9]?){6,14}[0-9]$")] [string[]] $PSTN
+	[ValidateScript({Test-SCTeamsProfile -ProfileName $_}, ErrorMessage = "Invalid Profile! Run Get-SCTeamsProfiles to see a list of profiles")] [Parameter(Mandatory=$True)] [string] $ProfileName, 
+	[ValidateNotNullOrEmpty()] [Parameter(Mandatory=$True)] [string] $LoginName, 
+	[ValidatePattern ("^\+(?:[0-9]?){6,14}[0-9]$")] [string] $PSTN
 )
 
 Begin { # Get Profiles and start transcript
@@ -321,7 +341,7 @@ process { # Do some actual stuff
 			#>
 			Try {
 				Write-Host "Setting up user..."
-				Set-CsPhoneNumberAssignment -Identity $SIPAddress -PhoneNumber $PSTN[0] -PhoneNumberType $AProfile.PhoneNumberType
+				Set-CsPhoneNumberAssignment -Identity $SIPAddress -PhoneNumber $PSTN -PhoneNumberType $AProfile.PhoneNumberType
 				Grant-CsCallingLineIdentity -Identity $SIPAddress -PolicyName $AProfile.CallingLineIdentity
 				Grant-CsDialoutPolicy -Identity $SIPAddress -PolicyName $AProfile.DialOutPolicy
 				If ($AProfile.RoutingPolicy -eq "Global") { Grant-CsOnlineVoiceRoutingPolicy -Identity $SIPAddress -PolicyName $Null }
@@ -449,12 +469,33 @@ Function Remove-SCTeamsUserPSTN{ [CmdletBinding()]
 }
 
 Function Get-SCHuntGroups {
+	<#
+	.Synopsis
+	Get a list of all hunt group phone numbers.
+	
+   .Description 
+	Get a list of all auto-atendants and call queue phone numbers, either to the screen or saved to a csv file.
+	
+   .Parameter FileName
+    Optional filename used for saving the list to a CSV file
+   
+   .Example 
+	
+   Saves a list of hunt groups to a csv file 
+
+        Get-SCHuntGroups -FileName MyList.csv
+
+	Display a list of hunt groups to your console
+
+		Get-SCHuntGroups
+	#>
+
 	Param ($FileName)
 
 	if ($Null -ne $FileName) {
 		Get-CsOnlineApplicationInstance | Where-Object phonenumber -ne $null| sort-object phonenumber | Select-Object PhoneNumber, DisplayName, UserPrincipalName | Export-Csv $FileName
 		} Else {
-		Get-CsOnlineApplicationInstance | Where-Object phonenumber -ne $null| sort-object phonenumber | Format-Table-property DisplayName, PhoneNumber, UserPrincipalName
+		Get-CsOnlineApplicationInstance | Where-Object phonenumber -ne $null| sort-object phonenumber | Format-Table -property DisplayName, PhoneNumber, UserPrincipalName
 	}
 }
 
@@ -509,8 +550,56 @@ Function Get-SCOperatorConnectUsers { [CmdletBinding()]
 }
 
 Function Get-SCPhoneNumber {
+<#
+.Synopsis
+	Get the details of a phone number.
+	
+   .Description 
+	Get extended details of a phone number whether its a user, auto attendant, call queue or conference number.
+		
+   .Parameter PSTN
+    The phone number in +441234123123 format (E.164) 
+	
+   .Example 
+   Get-SCPhoneNumber -PSTN +441234123123
+
+       Phone Number Details
+       ----------------------
+
+       TelephoneNumber         : ++441234123123
+       OperatorId              : 0dba58a4-00a1-4e4e-8aac-f34efc0bbdba
+       NumberType              : OperatorConnect
+       ActivationState         : Activated
+       AssignedPstnTargetId    : 3d6abcc8-eeef-498d-9102-5ddfe1c6fc1b
+       AssignmentCategory      : Primary
+       Capability              : {UserAssignment}
+       City                    : Bridgwater
+       CivicAddressId          : ef3d6d5a-1872-4249-a80c-6a00fe534b6d
+       IsoCountryCode          : GB
+       IsoSubdivision          : All
+       LocationId              : fe39d157-4ecd-4201-d587-412674c2c30e
+       LocationUpdateSupported : False
+       NetworkSiteId           :
+       PortInOrderStatus       :
+       PstnAssignmentStatus    : UserAssigned
+       PstnPartnerId           : 81dc6b74-53e4-43ae-a8a1-578aabb79e04
+       PstnPartnerName         : Gamma
+
+        User Details
+       --------------
+       LineUri                  : tel:+441234123123
+       UserPrincipalName        : John.Smith@homesinsedgemoor.org
+       DisplayName              : John Smith
+       EnterpriseVoiceEnabled   : True
+       OnlineDialOutPolicy      : DialoutCPCandPSTNDomestic
+       OnlineVoiceRoutingPolicy :
+       CallingLineIdentity      : CompanyCLI
+       Company                  : ACompany
+       Department               :
+#>
+
 [CmdletBinding()]
-param (	[ValidatePattern ("^\+(?:[0-9]?){6,14}[0-9]$")] [string[]] $PSTN )
+param (	[ValidatePattern ("^\+(?:[0-9]?){6,14}[0-9]$")] [string] $PSTN )
 
 
 	$Number = Get-CsPhoneNumberAssignment -TelephoneNumber "$PSTN"
@@ -543,12 +632,42 @@ param (	[ValidatePattern ("^\+(?:[0-9]?){6,14}[0-9]$")] [string[]] $PSTN )
 }
 
 Function Get-SCFreeUserNumber { [CmdletBinding()]
+<#
+	.Synopsis
+	Get a free phone number.
+	
+   .Description 
+	Returns a random free phone number from either Operator Connect or a Calling Plan.
+	
+   .Parameter NumberType
+    The type of number required either "OperatorConnect" or "CallingPlan"
+   
+   
+   .Example 
+
+	Exampe 1
+
+	Get-SCFreeUserNumber CallingPlan
+
+	Example 2
+	$NumberType = "OperatorConnect"
+	$PSTN = Get-SCFreeUserNumber $NumberType
+	Set-CsPhoneNumberAssignment -Identity $SIPAddress -PhoneNumber $PSTN -PhoneNumberType
+
+
+	Example 3
+
+	$PSTN = Get-SCFreeUserNumber OperatorConnect
+	Write-Host "Phone Number : $PSTN"
+	New-SCTeamsUser -ProfileName SDC -LoginName Brian.Derham -PSTN $PSTN 
+
+	
+#>	
+
 	param (
 	[ValidateSet('OperatorConnect','CallingPlan')]  [Parameter(Mandatory=$True, position = 0)] [string[]] $NumberType
 	)
-<#
-	Returns a random phone number that is not currently used
-#>
+
 	$AllNumbers = Get-CsPhoneNumberAssignment -ActivationState Activated -PstnAssignmentStatus Unassigned | Where-Object {$_.NumberType.Contains($NumberType)}
 	If ($AllNumbers.Count -gt 0) {
 		$RandNumber = get-random -Minimum 0 -Maximum ($AllNumbers.count - 1)
