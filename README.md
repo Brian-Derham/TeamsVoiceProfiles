@@ -1,7 +1,9 @@
-## Microsoft Teams Profiles
+## Microsoft Teams Voice Profiles
 
 #### Description
 A bunch of functions ready to use to do Teams admin as if they're commandlets. Currently its mainly geared towards Operator Connect and Calling plans but does support Direct Routing as part of the profiles although I have not tested with multiple direct routing providers in the same tenant.
+
+Once you defined your voice profiles in TeamsProfile.json, you can then speed up creation and administering of users with one command. 
 
     Function Get-SCTeamsProfiles
 	Function Set-SCTeamsProfiles -SCProfile ProfileObject
@@ -20,4 +22,14 @@ A bunch of functions ready to use to do Teams admin as if they're commandlets. C
  ". .\SCTeamsProfiles.ps1" to the end of the file, amending the path to SCTeamsProfiles.ps1 and this is 
  called dot sourcing. 
 
- Also this uses .\TeamsProfiles.json as a way of storing configured profiles.   
+ Also this uses .\TeamsProfiles.json as a way of storing configured profiles. The sample below is a predefined profile with the common policies and details you use day to day. 
+ 
+ 	    {
+      "ProfileName": "Sales",
+      "Domain": "domain.onmicrosoft.com",
+      "PhoneNumberType": "OperatorConnect",
+      "RoutingPolicy": "Global",
+      "DialOutPolicy": "DialoutCPCandPSTNDomestic",
+      "CallingLineIdentity": "SalesCLI",
+      "Description": "Sales staff profile"
+    },
