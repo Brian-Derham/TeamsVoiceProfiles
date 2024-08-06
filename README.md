@@ -16,6 +16,7 @@ Once you defined your voice profiles in TeamsProfile.json, you can then speed up
 	Function Get-SCPhoneNumber -PSTN +442071231234
 	Function Get-SCFreeUserNumber -NumberType OperatorConnect
 	Function Test-SCTeamsProfile -ProfileName ICT
+ 	Function Export-scUserPhoneNumbersAssignments -NumberType DirectRouting | ConvertTo-JSON | Out-File -Path ".\DirectRoutingNumbers.json"
 
  You need to 'load' the functions by running ". .\SCTeamsProfiles.ps1" from where ever you've put the files
  and if you're clever you might put this in your powershell profile by running "notepad $profile" and adding
