@@ -11,6 +11,7 @@
 	Function Get-SCPhoneNumber -PSTN +441234123123
 	Function Get-SCFreeUserNumber -NumberType OperatorConnect
 	Function Test-SCTeamsProfile -ProfileName BCP
+	Function Export-scUserPhoneNumbersAssignments -NumberType DirectRouting | ConvertTo-JSON | Out-File -Path ".\DirectRoutingNumbers.json"
 
   
   You need to 'load' the functions by running ". .\SCTeamsProfiles.ps1" from where ever you've put the files
@@ -678,6 +679,102 @@ Function Get-SCFreeUserNumber { [CmdletBinding()]
 
 
 
+
+
+
+
+Function Export-scUserPhoneNumberAssignments { [CmdletBinding()]
+	param ([Parameter()] [ValidateSet('OperatorConnect','CallingPlan','DirectRouting')][string[]]$NumberType = 'OperatorConnect' )
+	
+	 <# 
+		   .Synopsis
+			This lists all phone numbers of a given type.
+			
+		   .Description 
+			Use this function for a bulk export of phone numbers for a list of phone numbers that can be piped into another cmdlet. 
+			The Phone Number type are "OperatorConnect" "CallingPlan" and "DirectRouting". The default number type used if no parameter is specified is "OperatorConnect"
+			
+		   .Parameter NumberType
+			NumberType is a text string used to specity which kind of phone numbers are returned.
+		  
+		   .Example 
+			Export-scUserPhoneNumbersAssignments -NumberType OperatorConnect | Format-Table
+		
+			Export-scUserPhoneNumbersAssignments -NumberType CallingPlan | Export-CSV -Path ".\CallingPlanNumbers.csv"
+		
+			Export-scUserPhoneNumbersAssignments -NumberType DirectRouting | ConvertTo-JSON | Out-File -Path ".\DirectRoutingNumbers.json"
+			
+		   .LINK
+		   https://learn.microsoft.com/en-us/powershell/module/teams/get-csphonenumberassignment?view=teams-ps
+		  
+				
+		   .Remark	
+		   Some general information about what is going on not shown in help
+		#>
+	
+	
+	# Setup head and tail of the JSON string. It is strict with white spaces for literal definitions. 
+	
+$JSONBeginning = @"
+[
+[
+"@
+$JSONEnd =@"	
+]
+]
+"@
+	
+	# The array of users
+	$JSONUsers
+	
+	# the -top ([int]::MaxValue) gets all numbers so we don't need to know the area codes for each range
+	
+	foreach ($PhoneNumber in Get-CsPhoneNumberAssignment -top ([int]::MaxValue) | Where-Object {$_.NumberType -eq $NumberType } | Select-Object TelephoneNumber, NumberType, ActivationState, PstnAssignmentStatus, AssignedPstnTargetId )
+		{
+			If ($null -ne $PhoneNumber.AssignedPstnTargetId) {
+			
+				# Get user details instead of a GUID
+				$temp = get-csonlineuser -id $PhoneNumber.AssignedPstnTargetId | select-Object LineURI, DisplayName, UserPrincipalName
+				
+				$PhoneNumber.AssignedPstnTargetId = $temp.UserPrincipalName
+								
+			} 
+			Else{
+				$PhoneNumber.AssignedPstnTargetId = "Spare Number"
+			}
+			$User = $PhoneNumber | ConvertTo-JSON
+			
+			try {
+				$JSONUsers = $JSONUsers + ',' + $User #| ConvertFrom-JSON | ConvertTo-JSON
+			}
+			catch {
+				Write-Error "Error! User :-"
+				Write-Error $user |  ConvertFrom-Json 
+			}
+			
+			# Show some pretty feedback so you know something is happening	
+			$WindowWidth = $Host.UI.RawUI.WindowSize.Width
+			$CurPos = $host.UI.RawUI.CursorPosition
+			$Padding = $PhoneNumber.TelephoneNumber.Length +  $PhoneNumber.ActivationState.Length + $PhoneNumber.PstnAssignmentStatus.Length + $PhoneNumber.AssignedPstnTargetId.Length
+			If ($WindowWidth -lt $Padding) { $Padding = 0 }
+			
+			Write-host -nonewline -BackgroundColor green -ForegroundColor black $PhoneNumber.TelephoneNumber, $PhoneNumber.ActivationState, $PhoneNumber.PstnAssignmentStatus, $PhoneNumber.AssignedPstnTargetId " ".padright($windowWidth- $Padding -4," ")
+			
+			$host.UI.RawUI.CursorPosition = $CurPos
+					
+		}	# End ForEach
+		
+	$host.UI.RawUI.CursorPosition = $CurPos	
+	Write-Host -NoNewline -BackgroundColor Black -ForegroundColor DarkGray " ".padright($windowWidth," ")	
+	# Make valid JSON string
+	$UserList = $JSONBeginning + $JSONUsers + $JSONEnd 
+	# Convert back to Object
+	$ObjUsers = $UserList | ConvertFrom-Json 
+		
+		
+	#Return
+	 $ObjUsers
+}
 
 
 
